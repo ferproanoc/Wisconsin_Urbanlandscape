@@ -1,8 +1,3 @@
-###############################################################################################################################################
-#########################################################16S_DATASET R ANALYSIS-3###################################################################
-##############################################################################################################################################
-######Fer Proano Cuenca #################################################################FEB 2024#############################################
-
 ###################################################################################
 ######################7:COMMUNITY COMPOSITION - Figure 3 ##########################
 ###################################################################################
@@ -105,69 +100,8 @@ plot_b16Scom
 
 ggsave("16SF_Phyla_community.tiff", width = 12, height = 8.2, units = "in", dpi = 600)
 
-#############################End#############################################################################################
+#END
+#############################################################################################
+#############################################################################################
 
-
-#####################################################################Not run#######################################################
-#################################################Another way tp create a stacked plot###############################################
-library("phyloseq")
-library("ggplot2")
-library("tidyverse")
-library("BiocManager")
-BiocManager::install("microbiome")
-library("devtools") 
-install_github("microbiome/microbiome")
-library("microbiome")
-library("scales")
-
-#Re-read the data to create the Phyloseq object
-count_tab <- read.table("ASVs_ITS_countsFORWARD_USE.tsv", sep="\t", header=T, row.names=1) 
-tax_tab <- read.table("ASVs_taxa_ITSFRW_USE.tsv", sep="\t", header=T, row.names=1)
-sample_info_tab <- read.table("ITS_METADATA.txt", sep="\t", header=TRUE, row.names=1, fileEncoding = "UTF-8")
-
-asvs.t = t(count_tab) # t(x) = Transpose 'otu_table-class' or 'phyloseq-class'
-
-# Create a phyloseq object
-OTU <- otu_table(asvs.t, taxa_are_rows=F)
-SAM <- sample_data(sample_info_tab,errorIfNULL=TRUE)
-TAX <- tax_table(as.matrix(tax_tab), errorIfNULL=TRUE)
-data_phylo <- phyloseq(OTU, TAX, SAM)
-data_phylo 
-
-# Calculate the Phylum quantity 
-set.seed(111) # keep result reproductive
-data_phylo.rarefied = rarefy_even_depth(data_phylo)
-
-Fung.phylum <- data_phylo.rarefied %>%
-  tax_glom(taxrank = "Phylum") %>%  # agglomerate at phylum level
-  transform_sample_counts(function(x) {x/sum(x)} ) %>% # Transform to rel. abundance
-  psmelt() %>%  # Melt to long format
-  filter(Abundance > 0.01) %>% # Filter out low abundance taxa
-  arrange(Phylum) # Sort data frame alphabetically by phylum
-
-# Set colors for plotting
-Class_phylum <- c("turquoise","sienna","tomato","peru","blue3","coral2","firebrick","green3","yellow3","seagreen4","orange","red","deeppink","cyan","darkorange3","darkviolet","red3","red4","grey81","seagreen1","darkorange4","yellow","yellow4","green","green4","hotpink","blue4","purple","purple3","purple4","tan","tan3","maroon","tan4","black","grey50","grey91","pink","navy","pink3","lawngreen","pink4","lightskyblue")
-
-#Organize x axis
-Fung.phylum$Section_new <- factor(Fung.phylum$Section,levels = c("Thatch", "Bulk", "Leaf", "Rhizosphere"))
-Fung.phylum$Management_new <- factor(Fung.phylum$Management,levels = c("Greens", "Fairway", "Home Lawn", "Unmanaged"))
-
-#Plot #phylum labels based on abundance
-
-ggplot(Fung.phylum, aes(x = Section_new, y = Abundance, fill = reorder(Phylum, Abundance))) +
-  facet_wrap(~Management_new, nrow = 1) +
-  geom_bar(stat = "identity", position = "fill") +
-  scale_fill_manual(values = Class_phylum) +
-  theme_bw() +
-  guides(fill = guide_legend(reverse = TRUE, keywidth = 1, keyheight = 1)) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
-  labs(x = NULL, y = "Relative Abundance") +  # Change y-axis label
-  theme(axis.title.x = element_blank()) +  # Remove x-axis title completely
-  theme(legend.title = element_blank())  # Remove legend title
-
-ggsave("ITSPhyla_community_rare.tiff", dpi = 900, width = 12, height = 7.5, units = 'in')
-
-unique(tax_tab[, "Phylum"])
-table(tax_tab[, "Phylum"])
-#####################################################################################################################################
 
