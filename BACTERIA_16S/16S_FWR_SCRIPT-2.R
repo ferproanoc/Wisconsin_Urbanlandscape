@@ -1,8 +1,3 @@
-##############################################################################################################################################
-#########################################################16S_DATASET R ANALYSIS-2##############################################################
-##############################################################################################################################################
-#######Fer Proano Cuenca ###########################################################FEB 2024#############################################
-
 ###################################################################################
 ############################6: DATA EXPLORATION & FIGURES 1-2######################
 ###################################################################################
@@ -43,7 +38,7 @@ sum_seq
 min(sum_seq)
 max(sum_seq) # there is differences in the library size for the different samples
 
-#######################################################################################
+########################################################################################
 ###############################Figure 1: Alpha diversity################################
 ########################################################################################
 
@@ -58,7 +53,6 @@ library(car)
 library(janitor)
 library(broom)
 library (stats)
-packageVersion("stats")
 
 #To make data frames with the previously made phyloseq object
 sample.data.16S = data.frame(sample_data(data_phylo))
@@ -80,17 +74,6 @@ sample.data.16S$Management = factor(sample.data.16S$Management, levels = c("Gree
 
 #install.packages("multcompView")
 library("multcompView")
-
-#sample.data.16S.Shannon = sample.data.16S %>% 
-#  nest(data = -Section) %>% 
-#  mutate(Section = factor(Section, levels = c("Leaf", "Thatch", "Rhizoplane", "Rhizosphere"),
-#                          labels = c("Leaf", "Thatch", "Rhizoplane", "Rhizosphere")),
-#        glm = map(data, ~ glm(Shannon ~ Management, data = ., family = quasipoisson)),
-#        anova = map(data, ~ Anova(glm(Shannon ~ Management, data = . , family = quasipoisson))),
-#         emmeans = map(data, ~ emmeans(glm(Shannon ~ Management, data = ., family = quasipoisson),  ~  Management, type='response')),
-#         stat.grp = map(data, ~ multcomp::cld(emmeans(glm(Shannon ~ Management, data = . , family = quasipoisson),  ~  Management, type='response'), Letter="ABCDEFGHIJKLMNOPQRSTUVWZYZ")), 
-#        disease.CI = map(data, ~as.data.frame(summary(emmeans(glm(Shannon ~ Management, data = . , family = quasipoisson),  ~  Management, type='response'))))) %>%
-  #unnest(c(stat.grp))
 
 #usethis:
 sample.data.16S.Shannon = sample.data.16S %>% 
@@ -190,7 +173,6 @@ BObserved <- ggplot() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
   scale_color_manual(values = c("Greens" = "#d95f0e", "Home Lawn" = "#8856a7", "Unmanaged" = "#c51b8a", "Fairway" = "#117864"),
                      name = "Management")
-BObserved 
 
 # Increase the plot margins
 BObserved <- BObserved +
@@ -207,7 +189,6 @@ plot_BObserved
 
 ggsave("Observed_16SF.tiff", dpi = 900, width = 12, height = 7.5, units = 'in')
 
-
 #######################################################################################
 ###############################Figure 2: Beta diversity################################
 ########################################################################################
@@ -221,6 +202,7 @@ data_phylo.16S.norm = transform_sample_counts(data_phylo.rarefied, function(x) x
 data_phylo.16S.norm.nmds = ordinate(data_phylo.16S.norm , method = 'NMDS', distance = 'bray', k = 3, maxtry = 1000)
 
 data_phylo.16S.norm
+                                              
 #Plot
 library(RColorBrewer)
 
@@ -280,14 +262,3 @@ ggsave("BetaDiv_16SF_rare.tiff", dpi = 900, width = 12, height = 7.5, units = 'i
 #END 
 #################################################################################################################################
 #################################################################################################################################
-
-# calculate PCOA using Phyloseq package
-pcoa_bc = ordinate(data_phylo.16S.norm, "PCoA", "bray")  
-
-data_phylo.16S.norm
-
-plot_ordination(data_phylo.16S.norm, pcoa_bc, color = "Soil", shape="Section") + 
-  geom_point(size = 3) 
-
-library(vegan)
-adonis2(data_otu_rarefied~Management, data=sample_info_tab, permutations=9999, method="bray")
