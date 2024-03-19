@@ -110,8 +110,6 @@ write.table(seqtab.nochim,"ASVs_16S_F.txt",sep=",")
 
 saveRDS(seqtab.nochim, "16S_F_sqtb.asv.rds") #save the seqtab table
 
-save.image("~/Documents/Koch_lab/1.R_projects/Urban_microbiome/Publication/R_analysis/seqtab16S.RData")
-
 #Track reads through the pipeline
 getN <- function(x) sum(getUniques(x))
 track <- cbind(out, sapply(dadaFs, getN), rowSums(seqtab.nochim))
