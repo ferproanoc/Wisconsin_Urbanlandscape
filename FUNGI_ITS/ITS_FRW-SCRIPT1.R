@@ -1,8 +1,3 @@
-#########################################################################################################################################
-#############################################################ITS_DATASET R ANALYSIS #####################################################
-#########################################################################################################################################
-#####Fer Proano Cuenca ########################################################## FEB 2024###############################################
-
 #####################################################################################################
 ####################################1:PRE-PROCCESSING OF RAW DATA####################################
 #####################################################################################################
@@ -27,7 +22,7 @@ library(Biostrings)
 packageVersion("Biostrings")
 
 #Seth path:
-path_ITS <- "/Users/ferproanoc/Documents/Koch_lab/1.R_projects/Urban_microbiome/Publication/R_analysis/ITS_raw" #directory containing the fastq files
+path_ITS <- "/Users/ITS_raw" #directory containing the fastq files
 list.files(path_ITS) #list files in the directory
 
 ###Using only the Forward sequences since the reverse ones have bad quality and eliminates important information when used wit the forward.
@@ -118,8 +113,6 @@ write.table(seqtab.nochim,"ASVs_ITS_F.txt",sep=",")
 
 saveRDS(seqtab.nochim, "ITS_F_sqtb.asv.rds") #save the seqtab table
 
-save.image("~/Documents/Koch_lab/1.R_projects/Urban_microbiome/Publication/R_analysis/seqtabITS.RData")
-
 #Track reads through the pipeline
 getN <- function(x) sum(getUniques(x))
 track <- cbind(out, sapply(dadaFs, getN), rowSums(seqtab.nochim))
@@ -134,7 +127,7 @@ write.table(track, "read-count-trackingITSF.tsv", quote=FALSE, sep="\t", col.nam
 #####################################################################################################
 
 #FUNGI-UNITE REF DATABASE
-unite.ref <- "/Users/ferproanoc/Documents/Koch_lab/Ref_databases/sh_general_release_dynamic_all_25.07.2023_eukaryote.fasta" 
+unite.ref <- "/Users/sh_general_release_dynamic_all_25.07.2023_eukaryote.fasta" 
 
 taxa_ITS <- assignTaxonomy(seqtab.nochim, unite.ref, multithread = TRUE, tryRC = TRUE)
 
@@ -204,7 +197,6 @@ vector_for_decontam <- c(rep(TRUE, 0), rep(FALSE, 48))
 contam_df <- isContaminant(t(asv_tab), neg=vector_for_decontam)
 
 table(contam_df$contaminant)
-####NO Contaminants FOUND!!
 
 #####################################################################################################
 ####################################5:READ DATA AND PHYLOSEQ OBJECT####################################
