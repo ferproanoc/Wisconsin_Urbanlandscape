@@ -1,8 +1,3 @@
-#############################################################################################################################################
-#############################################################16S_DATASET R ANALYSIS1#########################################################
-#############################################################################################################################################
-##########Fer Proano Cuenca ########################################################## FEB 2024##############################################
-
 #####################################################################################################
 ####################################1:PRE-PROCCESSING OF RAW DATA####################################
 #####################################################################################################
@@ -24,7 +19,7 @@ library(ShortRead)
 library(Biostrings)
 
 #Seth path:
-path_16S <- "/Users/ferproanoc/Documents/Koch_lab/1.R_projects/Urban_microbiome/Publication/R_analysis/16s_raw" #directory containing the fastq files
+path_16S <- "/Users/16s_raw" #directory containing the fastq files
 list.files(path_16S) #list files in the directory
 
 ###Using only the Forward sequences since the reverse seqs bad quality and eliminates important information when used with the forward.
@@ -130,10 +125,10 @@ write.table(track, "read-count-tracking16SF.tsv", quote=FALSE, sep="\t", col.nam
 ####################################2:ASSIGN TAXONOMY################################################
 #####################################################################################################
 
-silva.ref <- "/Users/ferproanoc/Documents/Koch_lab/Ref_databases/silva_nr99_v138.1_train_set.fa.gz" 
+silva.ref <- "/Users/silva_nr99_v138.1_train_set.fa.gz" 
 
 taxa_16S <- assignTaxonomy(seqtab.nochim, silva.ref, multithread = TRUE, tryRC = TRUE)
-taxa_16S <- addSpecies(taxa_16S, "/Users/ferproanoc/Documents/Koch_lab/Ref_databases/silva_species_assignment_v138.1.fa.gz")
+taxa_16S <- addSpecies(taxa_16S, "/Users/silva_species_assignment_v138.1.fa.gz")
 taxa.print <- taxa_16S # Removing sequence rownames for display only
 
 rownames(taxa.print) <- NULL
@@ -164,7 +159,6 @@ write.table(asv_tab, "ASVs_16S_countsFORWARD.tsv", sep="\t", quote=F, col.names=
 
 #Taxa table:
 ranks <- c("Kingdom","Phylum","Class","Order","Family","Genus","Species")
-ranks
 
 colnames(taxa_16S) <- ranks
 rownames(taxa_16S) <- gsub(pattern=">", replacement="", x=asv_headers)
@@ -185,7 +179,6 @@ vector_for_decontam <- c(rep(TRUE, 0), rep(FALSE, 47))
 contam_df <- isContaminant(t(asv_tab), neg=vector_for_decontam)
 
 table(contam_df$contaminant)
-####NO Contaminants FOUND!!
 
 ##if any chloroplast or mitochondria contamination
 
@@ -199,10 +192,6 @@ dim(taxa.nochloro)
 is.mitochondria <- taxa.nochloro[,"Family"] %in% "Mitochondria"
 seqtab.nomito <- seqtab.nochloro[,!is.mitochondria]
 taxa.nomito <- taxa.nochloro[!is.mitochondria,]
-
-dim(seqtab.nomito)
-dim(seqtab.nochloro)
-dim(seqtab.nochim)
 
 seqtab_nochim_CM <- seqtab.nomito
 dim(seqtab_nochim_CM)
@@ -263,8 +252,6 @@ print(df_clean)
 
 # Write file with the cleaned data frame
 write.table(df_clean, "ASVs_16s_countsFORWARD_USE.tsv", sep = "\t", quote=F, col.names=NA)
-
-
 
 # Second, get rid of any row that have NA at the Phylum level
 
@@ -331,7 +318,6 @@ OTU <- otu_table(asvs.t, taxa_are_rows=F)
 SAM <- sample_data(sample_info_tab,errorIfNULL=TRUE)
 TAX <- tax_table(as.matrix(tax_tab), errorIfNULL=TRUE)
 data_phylo <- phyloseq(OTU, TAX, SAM)
-data_phylo 
 
 #END 
 #################################################################################################################################
