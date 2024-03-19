@@ -4,7 +4,6 @@
 
 ### Clear workspace ###
 rm(list=ls())
-getwd()
 
 library("phyloseq")
 packageVersion("phyloseq")
@@ -16,7 +15,6 @@ library("patchwork")
 count_tab <- read.table("16S_ASVs_countsF_USE.tsv", sep="\t", header=T, row.names=1) 
 tax_tab <- read.table("16S_ASVs_Taxonomy_F_USE.tsv", sep="\t", header=T, row.names=1)
 sample_info_tab <- read.table("16S_METADATA_use.txt", sep="\t", header=TRUE, row.names=1, fileEncoding = "UTF-8")
-
 asvs.t = t(count_tab) # t(x) = Transpose 'otu_table-class' or 'phyloseq-class'
 
 # Create a phyloseq object
@@ -24,7 +22,6 @@ OTU <- otu_table(asvs.t, taxa_are_rows=F)
 SAM <- sample_data(sample_info_tab,errorIfNULL=TRUE)
 TAX <- tax_table(as.matrix(tax_tab), errorIfNULL=TRUE)
 data_phylo <- phyloseq(OTU, TAX, SAM)
-data_phylo 
 
 #Rarefaction curve
 library(vegan)
@@ -33,10 +30,9 @@ rarecurve(asvs.t, step = 100, cex = 0.75, las = 1) #the total number of reads pe
 #Library size
 sum_seq <- rowSums(asvs.t)
 plot(sum_seq, ylim=c(0,100000), main=c("Number of counts per sample"), xlab=c("Samples"))
-sum_seq
 
 min(sum_seq)
-max(sum_seq) # there is differences in the library size for the different samples
+max(sum_seq) # there is differences in the library size for samples
 
 ########################################################################################
 ###############################Figure 1: Alpha diversity################################
@@ -59,7 +55,9 @@ sample.data.16S = data.frame(sample_data(data_phylo))
 
 alpha.16S = estimate_richness(data_phylo)
 
+##########################################
 ###########A. SHANNON DIVERSITY###########
+##########################################
 
 ##Alpha diversity (Shannon diversity index) across different sections 
 #(e.g., Leaf, Thatch, Rhizosphere, Bulk) in your microbiome dataset, considering the factor "Management" as a predictor. 
@@ -75,7 +73,6 @@ sample.data.16S$Management = factor(sample.data.16S$Management, levels = c("Gree
 #install.packages("multcompView")
 library("multcompView")
 
-#usethis:
 sample.data.16S.Shannon = sample.data.16S %>% 
   nest(data = -Section) %>% 
   mutate(Section = factor(Section, levels = c("Leaf", "Thatch", "Rhizoplane", "Rhizosphere")),
@@ -92,7 +89,10 @@ print(head(sample.data.16S.Shannon))
 
 sample.data.16S.Shannon$.group = gsub(" ", "",sample.data.16S.Shannon$.group)
 
-# Plotting Shannon
+##########################################
+##############Plotting Shannon############
+##########################################
+
 BShannon <- ggplot() +
   geom_errorbar(data = sample.data.16S.Shannon, aes(x=Section, ymin = asymp.LCL, ymax = asymp.UCL, color=Management), 
                 position = position_dodge(width = 0.8), width = 0, alpha=0.7, linewidth=4, show.legend = F) +
@@ -110,7 +110,6 @@ BShannon <- ggplot() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
   scale_color_manual(values = c("Greens" = "#d95f0e", "Home Lawn" = "#8856a7", "Unmanaged" = "#c51b8a", "Fairway" = "#117864"),
                      name = "Management")
-BShannon
 
 # Increase the plot margins
 BShannon <- BShannon +
@@ -122,9 +121,6 @@ plot_BShannon <- ggdraw() +
   draw_label("Bacteria", fontface = "bold", size = 18, x = 0.5, y = 0.98) +  # Add the title
   draw_label("D", size = 20, x = 0.025, y = 0.98, fontface = "bold")  # Add the tag "A"
 
-# Print the plot
-plot_BShannon
-
 ggsave("Shannon_16SF.tiff", dpi = 900, width = 12, height = 7.5, units = 'in')
 
 # Print the structure of the ANOVA results
@@ -134,9 +130,9 @@ print(sample.data.16S.Shannon$anova_result[[1]])
 p_values_anova <- sample.data.16S.Shannon %>%
   mutate(p_value_anova = map_dbl(anova_result, ~ filter(.x, term == "Management")$p.value))
 
-p_values_anova
-
-############B. OBSERVED DIVERSITY###########
+##########################################
+############B. OBSERVED DIVERSITY#########
+##########################################
 
 #To make data frames with the previously made phyloseq object
 sample.data.16S$Observed = alpha.16S$Observed
@@ -156,7 +152,10 @@ sample.data.16S.Observed = sample.data.16S %>%
 
 sample.data.16S.Observed$.group = gsub(" ", "",sample.data.16S.Observed$.group)
 
-# Plotting Observed
+##########################################
+############## Plotting Observed##########
+##########################################
+
 BObserved <- ggplot() +
   geom_errorbar(data = sample.data.16S.Observed, aes(x=Section, ymin = asymp.LCL, ymax = asymp.UCL, color=Management), 
                 position = position_dodge(width = 0.8), width = 0, alpha=0.7, linewidth=4, show.legend = F) +
@@ -184,9 +183,6 @@ plot_BObserved <- ggdraw() +
   draw_label("Bacteria", fontface = "bold", size = 18, x = 0.5, y = 0.98) +  # Add the title
   draw_label("C", size = 20, x = 0.025, y = 0.98, fontface = "bold")  # Add the tag "A"
 
-# Print the plot
-plot_BObserved
-
 ggsave("Observed_16SF.tiff", dpi = 900, width = 12, height = 7.5, units = 'in')
 
 #######################################################################################
@@ -202,8 +198,11 @@ data_phylo.16S.norm = transform_sample_counts(data_phylo.rarefied, function(x) x
 data_phylo.16S.norm.nmds = ordinate(data_phylo.16S.norm , method = 'NMDS', distance = 'bray', k = 3, maxtry = 1000)
 
 data_phylo.16S.norm
+                    
+##########################################
+#################Plot#####################
+##########################################
                                               
-#Plot
 library(RColorBrewer)
 
 beta16S <- plot_ordination(data_phylo.16S.norm, data_phylo.16S.norm.nmds, color = "Management", shape = "Section") + 
