@@ -1,15 +1,9 @@
-##############################################################################################################################################
-#########################################################ITS_DATASET R ANALYSIS-2##############################################################
-##############################################################################################################################################
-#######Fer Proano Cuenca ###########################################################FEB 2024#############################################
-
 ###################################################################################
 ############################6: DATA EXPLORATION & FIGURES 1-2######################
 ###################################################################################
 
 ### Clear workspace ###
 rm(list=ls())
-getwd()
 
 library("phyloseq")
 library("ggplot2")
@@ -63,7 +57,9 @@ sample.data.ITS = data.frame(sample_data(data_phylo))
 
 alpha.ITS = estimate_richness(data_phylo)
 
-###########A. SHANNON DIVERSITY###########
+######################################
+###########A. SHANNON DIVERSITY#######
+######################################
 
 ##Alpha diversity (Shannon diversity index) across different sections 
 #(e.g., Leaf, Thatch, Rhizosphere, Bulk) in your microbiome dataset, considering the factor "Management" as a predictor. 
@@ -92,11 +88,9 @@ sample.data.ITS.Shannon = sample.data.ITS %>%
 
 sample.data.ITS.Shannon$.group = gsub(" ", "",sample.data.ITS.Shannon$.group)
 
-# Plotting Shannon
-
-
-
-# Plotting Shannon
+######################################
+###### Plotting Shannon
+######################################
 
 #install.packages("cowplot")
 library(cowplot)
@@ -135,59 +129,9 @@ plot_FShannon
 
 ggsave("Shannon_ITSF.tiff", dpi = 900, width = 12, height = 7.5, units = 'in')
 
-###########A. Simpson DIVERSITY###########
-
-##Alpha diversity (Shannon diversity index) across different sections 
-#(e.g., Leaf, Thatch, Rhizosphere, Bulk) in your microbiome dataset, considering the factor "Management" as a predictor. 
-
-sample.data.ITS$InvSimpson = alpha.ITS$InvSimpson
-
-#handling missing values using na.omit()
-sample.data.ITS.InvSimpson <- na.omit(sample.data.ITS)
-
-sample.data.ITS$Section = factor(sample.data.ITS$Section, levels = c("Leaf", "Thatch", "Rhizoplane", "Rhizosphere"))
-sample.data.ITS$Management = factor(sample.data.ITS$Management, levels = c("Greens", "Home Lawn", "Unmanaged", "Fairway"))
-
-#install.packages("multcompView")
-library(multcompView)
-
-sample.data.ITS.InvSimpson = sample.data.ITS %>% 
-  nest(data = -Section) %>% 
-  mutate(Section = factor(Section, levels = c("Leaf", "Thatch", "Rhizoplane", "Rhizosphere"),
-                          labels = c("Leaf", "Thatch", "Rhizoplane", "Rhizosphere")),
-         glm = map(data, ~ glm(InvSimpson ~ Management, data = ., family = quasipoisson)),
-         anova = map(data, ~ Anova(glm(InvSimpson ~ Management, data = . , family = quasipoisson))),
-         emmeans = map(data, ~ emmeans(glm(InvSimpson ~ Management, data = ., family = quasipoisson),  ~  Management, type='response')),
-         stat.grp = map(data, ~ multcomp::cld(emmeans(glm(InvSimpson ~ Management, data = . , family = quasipoisson),  ~  Management, type='response'), Letter="ABCDEFGHIJKLMNOPQRSTUVWZYZ")), 
-         disease.CI = map(data, ~as.data.frame(summary(emmeans(glm(InvSimpson ~ Management, data = . , family = quasipoisson),  ~  Management, type='response'))))) %>%
-  unnest(c(stat.grp))
-
-sample.data.ITS.InvSimpson$.group = gsub(" ", "",sample.data.ITS.InvSimpson$.group)
-
-#install.packages("cowplot")
-library(cowplot)
-packageVersion("cowplot")
-citation("cowplot")
-
-FInvSimpson <- ggplot() +
-  geom_errorbar(data = sample.data.ITS.InvSimpson, aes(x=Section, ymin = asymp.LCL, ymax = asymp.UCL, color=Management), 
-                position = position_dodge(width = 0.8), width = 0, alpha=0.7, linewidth=4, show.legend = FALSE) +
-  geom_point(data = sample.data.ITS.InvSimpson,aes(x = Section, y = rate, color = Management), 
-             position = position_dodge(width = 0.8), size = 6, show.legend = FALSE, alpha = 0.99) +
-  geom_text(data = sample.data.ITS.InvSimpson, aes(label = .group, x = Section, group = Management, y = asymp.UCL+(0.004*max(asymp.UCL))), 
-            position = position_dodge(width = 0.8), vjust = -0.5, size = 6, hjust = 0.5) +
-  geom_vline(xintercept = c(1.5, 2.5, 3.5), lty = 'twodash', alpha = 0.4)+
-  xlab('') + ylab("Simpson Diversity Index") +
-  ylim(NA, max(sample.data.ITS.InvSimpson$asymp.UCL+(0.04*max(sample.data.ITS.InvSimpson$asymp.UCL)))) +
-  theme_light(base_size = 20, base_family = "Times") + 
-  theme(panel.background = element_rect(fill = '#FAFAFA')) + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
-  scale_color_manual(values = c("Greens" = "#d95f0e", "Home Lawn" = "#8856a7", "Unmanaged" = "#c51b8a", "Fairway" = "#117864"),
-                     name = "Management")
-
-FInvSimpson
-
-############B. OBSERVED DIVERSITY###########
+######################################
+########B. OBSERVED DIVERSITY#########
+######################################
 
 #To make data frames with the previously made phyloseq object
 sample.data.ITS$Observed = alpha.ITS$Observed
@@ -207,7 +151,10 @@ sample.data.ITS.Observed = sample.data.ITS %>%
 
 sample.data.ITS.Observed$.group = gsub(" ", "",sample.data.ITS.Observed$.group)
 
+######################################
 # Plotting Observed
+######################################
+
 FObserved <-  ggplot() +
   geom_errorbar(data = sample.data.ITS.Observed, aes(x=Section, ymin = asymp.LCL, ymax = asymp.UCL, color=Management), 
                 position = position_dodge(width = 0.8), width = 0, alpha=0.7, linewidth=4, show.legend = F) +
@@ -239,7 +186,6 @@ plot_FObserved <- ggdraw() +
 # Print the plot
 plot_FObserved
 
-
 ggsave("Observed_ITSF.tiff", dpi = 900, width = 12, height = 7.5, units = 'in')
 
 #######################################################################################
@@ -254,7 +200,10 @@ data_phylo.rarefied = rarefy_even_depth(data_phylo)
 data_phylo.ITS.norm = transform_sample_counts(data_phylo.rarefied, function(x) x / sum(x))
 data_phylo.ITS.norm.nmds = ordinate(data_phylo.ITS.norm , method = 'NMDS', distance = 'bray', k = 3, maxtry = 1000)
 
-#Plot
+######################################
+################Plot
+######################################
+                                              
 library(RColorBrewer)
 
 plot_ordination(data_phylo.ITS.norm, data_phylo.ITS.norm.nmds, color = "Management", shape = "Section") + 
@@ -315,9 +264,3 @@ ggsave("BetaDiv_ITSF.tiff", dpi = 900, width = 12, height = 7.5, units = 'in')
 #END 
 #################################################################################################################################
 #################################################################################################################################
-
-# calculate PCOA using Phyloseq package
-pcoa_ic = ordinate(data_phylo.ITS.norm, "PCoA", "bray") 
-
-plot_ordination(data_phylo.ITS.norm, pcoa_ic, color = "Grass", shape= "Management") + 
-  geom_point(size = 3) 
