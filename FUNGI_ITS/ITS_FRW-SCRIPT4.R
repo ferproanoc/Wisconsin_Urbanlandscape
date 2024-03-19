@@ -1,14 +1,6 @@
-###############################################################################################################################################
-#########################################################ITS_DATASET R ANALYSIS-4###################################################################
-##############################################################################################################################################
-######Fer Proano Cuenca #################################################################FEB 2024#############################################
-
 ##########################################################################################################
-##################8:SLOAN NEUTRAL MODEL - Figure 4-5 Whole community, below and above ground ##############
+##################8:SLOAN NEUTRAL MODEL - Figure 4 Whole community, below and above ground ##############
 ##########################################################################################################
-
-#patterns of biodiversity within microbial communities, particularly in the context of microbial biogeography. 
-#https://github.com/seb369/landuse_comm_assembly/blob/master/Neutral_model.md
 
 ### Clear workspace ###
 rm(list=ls())
@@ -55,7 +47,9 @@ library("stats4")
 # Extract the OTU table from the phyloseq object
 OTU.table = otu_table(data_phylo.rare)
 
-####################################Method 1
+########################################################################
+#####################Model Whole community##############################
+########################################################################
 
 # calculate the average number of individuals per community (number of sequences per sumple?) #
 N <- mean(apply(OTU.table, 1, sum))
@@ -106,9 +100,6 @@ colnames(B) <- c("p", "freq", "freq.pred", "ci.lower", "ci.upper")
 
 # write prediction data #
 write.csv(B, "Result_Prediction_ITSS.tsv")
-
-m.fit 
-Rsqr
 
 # set point colour #
 Col <- rep(1,nrow(B))
@@ -184,7 +175,7 @@ plot_fungal.model
 ggsave(file = "Neutral_metacommunity_ITSF.tiff", dpi = 900, width = 16, height = 12, units = 'in')
 
 #########################################################
-###########Figure 5: above and below ground##############
+###########Figure 4: above and below ground##############
 #########################################################
 
 # Section is the column in your sample_info_tab that denotes the habitat
@@ -197,7 +188,9 @@ data_phylo <- phyloseq(OTU, TAX, SAM)
 # Create phyloseq object for above habitat
 data_phylo_above <- subset_samples(data_phylo, Habitat == "Above_ground")
 
-################################ABOVE GROUND################################
+########################################################################
+################################ABOVE GROUND############################
+########################################################################
 
 # Rarefy to an even depth
 set.seed(111)
@@ -259,9 +252,6 @@ B <- cbind(p, freq, freq.pred, pred.ci[,2:3])
 # merge prediction results and keystone list #
 #B <- merge(A, KSDF, by=0)
 colnames(B) <- c("p", "freq", "freq.pred", "ci.lower", "ci.upper")
-
-m.fit 
-Rsqr
 
 # set point colour #
 Col <- rep(1,nrow(B))
@@ -336,7 +326,9 @@ plot_aboveITS.model
 
 ggsave(file = "Neutral_above_ground_ITSF.tiff", dpi = 900, width = 16, height = 12, units = 'in')
 
-##########################################BELOW GROUND#########################
+########################################################################
+#############################BELOW GROUND##############################
+########################################################################
 
 # Create phyloseq object for below ground habitat
 data_phylo_below <- subset_samples(data_phylo, Habitat == "Below_ground")
@@ -396,9 +388,6 @@ B <- cbind(p, freq, freq.pred, pred.ci[,2:3])
 # merge prediction results and keystone list #
 #B <- merge(A, KSDF, by=0)
 colnames(B) <- c("p", "freq", "freq.pred", "ci.lower", "ci.upper")
-
-m.fit 
-Rsqr
 
 # set point colour #
 Col <- rep(1,nrow(B))
@@ -473,271 +462,6 @@ plot_belowITS.model
 
 ggsave(file = "Neutral_below_ground_ITSF.tiff", dpi = 900, width = 16, height = 12, units = 'in')
 
-#END#############################################################################################################
-####################################Method 2
-
-# Calculate the number of individuals in the meta community (Average read depth)
-N <- mean(apply(OTU.table, 1, sum))
-
-# Calculate the average relative abundance of each taxa across communities
-p.m <- apply(OTU.table, 2, mean)
-p.m <- p.m[p.m != 0]
-p <- p.m/N
-p.df = data.frame(p) %>%
-  rownames_to_column(var="OTU")
-
-# Calculate the occurrence frequency of each taxa
-OTU.table.bi <- 1*(OTU.table>0)
-freq.table <- apply(OTU.table.bi, 2, mean)
-freq.table <- freq.table[freq.table != 0]
-freq.df = data.frame(OTU=names(freq.table), freq=freq.table)
-
-#Combine
-C <- inner_join(p.df,freq.df, by="OTU") %>%
-  arrange(p)
-# Remove rows with any zero (absent in either source pool or local communities). You already did this, but just to make sure we will do it again.
-C.no0 <- C %>%
-  filter(freq != 0, p != 0)
-
-#Calculate the limit of detection
-d <- 1/N
-
-##Fit model parameter m (or Nm) using Non-linear least squares (NLS)
-p.list <- C.no0$p
-freq.list <- C.no0$freq
-m.fit <- nlsLM(freq.list ~ pbeta(d, N*m*p.list, N*m*(1-p.list), lower.tail=FALSE), start=list(m=0.1))
-m.ci <- confint(m.fit, 'm', level=0.95)
-m.sum <- summary(m.fit)
-m.coef = coef(m.fit)
-
-freq.pred <- pbeta(d, N*coef(m.fit)*p.list, N*coef(m.fit)*(1-p.list), lower.tail=FALSE)
-Rsqr <- 1 - (sum((freq.list - freq.pred)^2))/(sum((freq.list - mean(freq.list))^2))
-
-# Get table of model fit stats
-fitstats <- data.frame(m=m.coef, m.low.ci=m.ci[1], m.up.ci=m.ci[2], 
-                       Rsqr=Rsqr, p.value=m.sum$parameters[4], N=N, 
-                       Samples=nrow(OTU.table), Richness=length(p.list), 
-                       Detect=d)
-
-# Get confidence interval for predictions
-freq.pred.ci <- binconf(freq.pred*nrow(OTU.table), nrow(OTU.table), alpha=0.05, method="wilson", return.df=TRUE)
-
-# Get table of predictions
-pred.df <- data.frame(metacomm_RA=p.list, frequency=freq.pred, 
-                      frequency_lowerCI=freq.pred.ci[,2], 
-                      frequency_upperCI=freq.pred.ci[,3]) %>%
-  unique()
-
-# Get table of observed occupancy and abundance
-obs.df <- C.no0 %>%
-  dplyr::rename(metacomm_RA = p, frequency = freq)
-
-fungal.model <- ggplot(data=obs.df) +
-  geom_point(data=obs.df, aes(x=log10(metacomm_RA), y=frequency), 
-             alpha=.4, size=3, color="#37AEC3") +
-  geom_line(data=pred.df, aes(x=log10(metacomm_RA), y=frequency), color="red") + 
-  geom_line(data=pred.df, aes(x=log10(metacomm_RA), y=frequency_lowerCI), linetype=2, color="red") + 
-  geom_line(data=pred.df, aes(x=log10(metacomm_RA), y=frequency_upperCI), linetype=2, color="red") + 
-  geom_text(data=fitstats, aes(label = paste("R^2 == ", round(Rsqr, 3))), 
-            x=-5.75, y=0.96, size=5, parse=TRUE) +
-  geom_text(data=fitstats, aes(label = paste("italic(m) ==", round(m, 3))), 
-            x=-5.75, y=0.88, size=5, parse=TRUE) + 
-  labs(x = expression(Log[10](Mean~relative~abundance)), y="Ocurrence frequency") +
-  theme_bw(base_size = 32, base_family = "Times") +
-  theme(legend.position = "none",axis.title = element_text(size=20),axis.text = element_text(size=20))+
-  ylim(0,1)  # Set the x-axis limits
-fungal.model 
-
-# Increase the plot margins
-fungal.model  <- fungal.model  +
-  theme(plot.margin = margin(30, 10, 10, 10, "pt"))  # Adjust the margins as needed
-
-# Create a ggdraw object
-plot_fungal.model  <- ggdraw() +
-  draw_plot(fungal.model) +  # Add the plot
-  draw_label("ITS Neutral Model", fontface = "bold", size = 18, x = 0.5, y = 0.98) +  # Add the title
-  draw_label("A", size = 18, x = 0.025, y = 0.98, fontface = "bold")  # Add the tag "A"
-
-# Print the plot
-plot_fungal.model
-
-ggsave(file = "Neutral_metacommunity_ITSF.tiff", dpi = 900, width = 16, height = 12, units = 'in')
-
-
-#######above#####
-
-# Calculate the number of individuals in the meta community (Average read depth)
-N <- mean(apply(OTU.table, 1, sum))
-
-# Calculate the average relative abundance of each taxa across communities
-p.m <- apply(OTU.table, 2, mean)
-p.m <- p.m[p.m != 0]
-p <- p.m/N
-p.df = data.frame(p) %>%
-  rownames_to_column(var="OTU")
-
-# Calculate the occurrence frequency of each taxa
-OTU.table.bi <- 1*(OTU.table>0)
-freq.table <- apply(OTU.table.bi, 2, mean)
-freq.table <- freq.table[freq.table != 0]
-freq.df = data.frame(OTU=names(freq.table), freq=freq.table)
-
-#Combine
-C <- inner_join(p.df,freq.df, by="OTU") %>%
-  arrange(p)
-# Remove rows with any zero (absent in either source pool or local communities). You already did this, but just to make sure we will do it again.
-C.no0 <- C %>%
-  filter(freq != 0, p != 0)
-
-#Calculate the limit of detection
-d <- 1/N
-
-##Fit model parameter m (or Nm) using Non-linear least squares (NLS)
-p.list <- C.no0$p
-freq.list <- C.no0$freq
-m.fit <- nlsLM(freq.list ~ pbeta(d, N*m*p.list, N*m*(1-p.list), lower.tail=FALSE), start=list(m=0.01))
-m.ci <- confint(m.fit, 'm', level=0.95)
-m.sum <- summary(m.fit)
-m.coef = coef(m.fit)
-
-freq.pred <- pbeta(d, N*coef(m.fit)*p.list, N*coef(m.fit)*(1-p.list), lower.tail=FALSE)
-Rsqr <- 1 - (sum((freq.list - freq.pred)^2))/(sum((freq.list - mean(freq.list))^2))
-
-# Get table of model fit stats
-fitstats.a <- data.frame(m=m.coef, m.low.ci=m.ci[1], m.up.ci=m.ci[2], 
-                         Rsqr=Rsqr, p.value=m.sum$parameters[4], N=N, 
-                         Samples=nrow(OTU.table), Richness=length(p.list), 
-                         Detect=d)
-
-# Get confidence interval for predictions
-freq.pred.ci <- binconf(freq.pred*nrow(OTU.table), nrow(OTU.table), alpha=0.05, method="wilson", return.df=TRUE)
-
-# Get table of predictions
-pred.df <- data.frame(metacomm_RA=p.list, frequency=freq.pred, 
-                      frequency_lowerCI=freq.pred.ci[,2], 
-                      frequency_upperCI=freq.pred.ci[,3]) %>%
-  unique()
-
-# Get table of observed occupancy and abundance
-obs.df <- C.no0 %>%
-  dplyr::rename(metacomm_RA = p, frequency = freq)
-
-#plot
-
-aboveITS.model = ggplot(data=obs.df) +
-  geom_point(data=obs.df, aes(x=log10(metacomm_RA), y=frequency), 
-             alpha=.4, size=3, color="#37AEC3") +
-  geom_line(data=pred.df, aes(x=log10(metacomm_RA), y=frequency), color="red") + 
-  geom_line(data=pred.df, aes(x=log10(metacomm_RA), y=frequency_lowerCI), linetype=2, color="red") + 
-  geom_line(data=pred.df, aes(x=log10(metacomm_RA), y=frequency_upperCI), linetype=2, color="red") + 
-  geom_text(data=fitstats.a, aes(label = paste("R^2 == ", round(Rsqr, 3))), 
-            x=-5.25, y=0.96, size=5, parse=TRUE) +
-  geom_text(data=fitstats.a, aes(label = paste("italic(m) ==", round(m, 3))), 
-            x=-5.25, y=0.88, size=5, parse=TRUE) + 
-  labs(x = expression(Log[10](Mean~relative~abundance)), y="Ocurrence frequency") +
-  theme_bw(base_size = 32, base_family = "Times") +
-  theme(legend.position = "none",axis.title = element_text(size=20),axis.text = element_text(size=20))+
-  ylim(0,1)  # Set the x-axis limits
-
-aboveITS.model  <- aboveITS.model +
-  theme(plot.margin = margin(30, 10, 10, 10, "pt"))  # Adjust the margins as needed
-
-# Create a ggdraw object
-plot_aboveITS.model  <- ggdraw() +
-  draw_plot(aboveITS.model) +  # Add the plot
-  draw_label("ITS Above ground", fontface = "bold", size = 18, x = 0.5, y = 0.98) +  # Add the title
-  draw_label("A", size = 18, x = 0.025, y = 0.98, fontface = "bold")  # Add the tag "A"
-
-# Print the plot
-plot_aboveITS.model
-
-ggsave(file = "Neutral_above_ground_ITSF.tiff", dpi = 900, width = 16, height = 12, units = 'in')
-
-#######below
-
-# Calculate the number of individuals in the meta community (Average read depth)
-N <- mean(apply(OTU.table, 1, sum))
-
-# Calculate the average relative abundance of each taxa across communities
-p.m <- apply(OTU.table, 2, mean)
-p.m <- p.m[p.m != 0]
-p <- p.m/N
-p.df = data.frame(p) %>%
-  rownames_to_column(var="OTU")
-
-# Calculate the occurrence frequency of each taxa
-OTU.table.bi <- 1*(OTU.table>0)
-freq.table <- apply(OTU.table.bi, 2, mean)
-freq.table <- freq.table[freq.table != 0]
-freq.df = data.frame(OTU=names(freq.table), freq=freq.table)
-
-#Combine
-C <- inner_join(p.df,freq.df, by="OTU") %>%
-  arrange(p)
-# Remove rows with any zero (absent in either source pool or local communities). You already did this, but just to make sure we will do it again.
-C.no0 <- C %>%
-  filter(freq != 0, p != 0)
-
-#Calculate the limit of detection
-d <- 1/N
-
-##Fit model parameter m (or Nm) using Non-linear least squares (NLS)
-p.list <- C.no0$p
-freq.list <- C.no0$freq
-m.fit <- nlsLM(freq.list ~ pbeta(d, N*m*p.list, N*m*(1-p.list), lower.tail=FALSE), start=list(m=0.01))
-m.ci <- confint(m.fit, 'm', level=0.95)
-m.sum <- summary(m.fit)
-m.coef = coef(m.fit)
-
-freq.pred <- pbeta(d, N*coef(m.fit)*p.list, N*coef(m.fit)*(1-p.list), lower.tail=FALSE)
-Rsqr <- 1 - (sum((freq.list - freq.pred)^2))/(sum((freq.list - mean(freq.list))^2))
-
-# Get table of model fit stats
-fitstats.b <- data.frame(m=m.coef, m.low.ci=m.ci[1], m.up.ci=m.ci[2], 
-                         Rsqr=Rsqr, p.value=m.sum$parameters[4], N=N, 
-                         Samples=nrow(OTU.table), Richness=length(p.list), 
-                         Detect=d)
-
-# Get confidence interval for predictions
-freq.pred.ci <- binconf(freq.pred*nrow(OTU.table), nrow(OTU.table), alpha=0.05, method="wilson", return.df=TRUE)
-
-# Get table of predictions
-pred.df <- data.frame(metacomm_RA=p.list, frequency=freq.pred, 
-                      frequency_lowerCI=freq.pred.ci[,2], 
-                      frequency_upperCI=freq.pred.ci[,3]) %>%
-  unique()
-
-# Get table of observed occupancy and abundance
-obs.df <- C.no0 %>%
-  dplyr::rename(metacomm_RA = p, frequency = freq)
-
-#plot
-
-belowITS.model <- ggplot(data=obs.df) +
-  geom_point(data=obs.df, aes(x=log10(metacomm_RA), y=frequency), 
-             alpha=.4, size=3, color="#37AEC3") +
-  geom_line(data=pred.df, aes(x=log10(metacomm_RA), y=frequency), color="red") + 
-  geom_line(data=pred.df, aes(x=log10(metacomm_RA), y=frequency_lowerCI), linetype=2, color="red") + 
-  geom_line(data=pred.df, aes(x=log10(metacomm_RA), y=frequency_upperCI), linetype=2, color="red") + 
-  geom_text(data=fitstats.b, aes(label = paste("R^2 == ", round(Rsqr, 3))), 
-            x=-5.25, y=0.96, size=5, parse=TRUE) +
-  geom_text(data=fitstats.b, aes(label = paste("italic(m) ==", round(m, 3))), 
-            x=-5.25, y=0.88, size=5, parse=TRUE) + 
-  labs(x = expression(Log[10](Mean~relative~abundance)), y="Ocurrence frequency") +
-  theme_bw(base_size = 32, base_family = "Times") +
-  theme(legend.position = "none",axis.title = element_text(size=20),axis.text = element_text(size=20))+
-  ylim(0,1)  # Set the x-axis limits
-
-belowITS.model  <- belowITS.model +
-  theme(plot.margin = margin(30, 10, 10, 10, "pt"))  # Adjust the margins as needed
-
-# Create a ggdraw object
-plot_belowITS.model  <- ggdraw() +
-  draw_plot(belowITS.model) +  # Add the plot
-  draw_label("ITS Below ground", fontface = "bold", size = 18, x = 0.5, y = 0.98) +  # Add the title
-  draw_label("B", size = 18, x = 0.025, y = 0.98, fontface = "bold")  # Add the tag "A"
-
-# Print the plot
-plot_belowITS.model
-
-ggsave(file = "Neutral_below_ground_ITSF.tiff", dpi = 900, width = 16, height = 12, units = 'in')
+#END
+##############################################################################
+##############################################################################
