@@ -2,7 +2,9 @@
 ######################9: R2 BY MANAGEMENT INTENSITY -Figure 6##################
 ###############################################################################
 
-##################ABOVE GROUND HABITAT: LEAVES AND THATCH######################
+###############################################################################
+##################ABOVE GROUND HABITATS: LEAVES AND THATCH######################
+###############################################################################
 
 ### Clear workspace ###
 rm(list=ls())
@@ -25,7 +27,6 @@ library(gridExtra)
 count_tab <- read.table("16S_ASVs_countsF_USE.tsv", sep="\t", header=T, row.names=1) 
 tax_tab <- read.table("16S_ASVs_Taxonomy_F_USE.tsv", sep="\t", header=T, row.names=1)
 sample_info_tab <- read.table("16S_METADATA_use.txt", sep="\t", header=TRUE, row.names=1, fileEncoding = "UTF-8")
-
 asvs.t = t(count_tab) # t(x) = Transpose 'otu_table-class' or 'phyloseq-class'
 
 # Create a phyloseq object
@@ -33,7 +34,6 @@ OTU <- otu_table(asvs.t, taxa_are_rows=F)
 SAM <- sample_data(sample_info_tab,errorIfNULL=TRUE)
 TAX <- tax_table(as.matrix(tax_tab), errorIfNULL=TRUE)
 data_phylo <- phyloseq(OTU, TAX, SAM)
-data_phylo 
 
 # Section is the column in your sample_info_tab that denotes the habitat
 sample_info_tab$Habitat <- factor(ifelse(sample_info_tab$Section %in% c("Thatch", "Leaf"), "Above_ground", "Below_ground"))
@@ -41,14 +41,12 @@ sample_info_tab$Habitat <- factor(ifelse(sample_info_tab$Section %in% c("Thatch"
 # Update the phyloseq object with the new metadata
 SAM <- sample_data(sample_info_tab, errorIfNULL=TRUE)
 data_phylo <- phyloseq(OTU, TAX, SAM)
-data_phylo
 # Assuming "Management" is the column in your sample_info_tab that denotes the management type
 sample_info_tab$Management <- factor(sample_info_tab$Management)
 
 # Update the phyloseq object with the new metadata
 SAM <- sample_data(sample_info_tab, errorIfNULL=TRUE)
 data_phylo <- phyloseq(OTU, TAX, SAM)
-data_phylo 
 
 # Create phyloseq object for above ground habitat
 data_phylo_above<- subset_samples(data_phylo, Habitat == "Above_ground")
@@ -62,7 +60,10 @@ data_phylo_home_lawn <- subset_samples(data_phylo_above, Management == "Home Law
 data_phylo_greens <- subset_samples(data_phylo_above, Management == "Greens")
 data_phylo_fairway <- subset_samples(data_phylo_above, Management == "Fairway")
 
-###########ABOVE GROUND - UNMANAGED:##########
+##############################################
+###########ABOVE GROUND - UNMANAGED##########
+##############################################
+
 # Rarefy to an even depth
 set.seed(111)
 data_phylo_unmanaged.rare <- rarefy_even_depth(data_phylo_unmanaged)
@@ -115,8 +116,11 @@ fitstats.unmanaged <- data.frame(m=m.coef, m.low.ci=m.ci[1], m.up.ci=m.ci[2],
                                  Rsqr=Rsqr, p.value=m.sum$parameters[4], N=N, 
                                  Samples=nrow(OTU.table), Richness=length(p.list), 
                                  Detect=d)
-
-##############ABOVE - HOME LAWN:###############
+                                                     
+##############################################
+##############ABOVE - HOME LAWN##############
+##############################################
+                                                     
 # Rarefy to an even depth
 set.seed(111)
 data_phylo_home_lawn.rare <- rarefy_even_depth(data_phylo_home_lawn)
@@ -169,8 +173,10 @@ fitstats.home_lawn <- data.frame(m=m.coef, m.low.ci=m.ci[1], m.up.ci=m.ci[2],
                                  Rsqr=Rsqr, p.value=m.sum$parameters[4], N=N, 
                                  Samples=nrow(OTU.table), Richness=length(p.list), 
                                  Detect=d)
-
-#################ABOVE GROUND - GREENS:################
+##############################################
+##########ABOVE GROUND - GREENS##############
+##############################################
+                                                     
 # Rarefy to an even depth
 set.seed(111)
 data_phylo_greens.rare <- rarefy_even_depth(data_phylo_greens)
@@ -223,8 +229,10 @@ fitstats.greens <- data.frame(m=m.coef, m.low.ci=m.ci[1], m.up.ci=m.ci[2],
                               Rsqr=Rsqr, p.value=m.sum$parameters[4], N=N, 
                               Samples=nrow(OTU.table), Richness=length(p.list), 
                               Detect=d)
-
-#################ABOVE GROUND - FAIRWAY:################
+##############################################
+##############ABOVE GROUND - FAIRWAY#########
+##############################################
+                                                  
 # Rarefy to an even depth
 set.seed(111)
 data_phylo_fairway.rare <- rarefy_even_depth(data_phylo_fairway)
@@ -277,8 +285,10 @@ fitstats.fairway <- data.frame(m=m.coef, m.low.ci=m.ci[1], m.up.ci=m.ci[2],
                                Rsqr=Rsqr, p.value=m.sum$parameters[4], N=N, 
                                Samples=nrow(OTU.table), Richness=length(p.list), 
                                Detect=d)
-
-################################BELOW GROUND HABITAT############################
+                                                   
+################################################################################
+##############BELOW GROUND HABITAT: Rhizosphere, Rhizoplane#####################
+################################################################################
 
 # Create phyloseq object for terrestrial habitat
 data_phylo_below <- subset_samples(data_phylo, Habitat == "Below_ground")
@@ -292,7 +302,9 @@ data_phylo_home_lawn.b <- subset_samples(data_phylo_below, Management == "Home L
 data_phylo_greens.b <- subset_samples(data_phylo_below, Management == "Greens")
 data_phylo_fairway.b <- subset_samples(data_phylo_below, Management == "Fairway")
 
-######################BELOW GROUND - UNMANAGED:################
+##################################################
+############BELOW GROUND - UNMANAGED##############
+##################################################
 
 # Rarefy to an even depth
 set.seed(111)
@@ -346,8 +358,10 @@ fitstats.unmanaged.b <- data.frame(m=m.coef, m.low.ci=m.ci[1], m.up.ci=m.ci[2],
                                    Rsqr=Rsqr, p.value=m.sum$parameters[4], N=N, 
                                    Samples=nrow(OTU.table), Richness=length(p.list), 
                                    Detect=d)
-
-#################BELOW GROUND - HOME LAWN:#####################
+##################################################
+########BELOW GROUND - HOME LAWN##################
+##################################################
+                                                       
 # Rarefy to an even depth
 set.seed(111)
 data_phylo_home_lawn.b.rare <- rarefy_even_depth(data_phylo_home_lawn.b)
@@ -400,8 +414,11 @@ fitstats.home_lawn.b <- data.frame(m=m.coef, m.low.ci=m.ci[1], m.up.ci=m.ci[2],
                                    Rsqr=Rsqr, p.value=m.sum$parameters[4], N=N, 
                                    Samples=nrow(OTU.table), Richness=length(p.list), 
                                    Detect=d)
-
-#######################BELOW GROUND - GREENS:#######################
+                                                       
+##################################################
+#############BELOW GROUND - GREENS################
+##################################################
+                                                       
 # Rarefy to an even depth
 set.seed(111)
 data_phylo_greens.b.rare <- rarefy_even_depth(data_phylo_greens.b)
@@ -454,8 +471,11 @@ fitstats.greens.b <- data.frame(m=m.coef, m.low.ci=m.ci[1], m.up.ci=m.ci[2],
                                 Rsqr=Rsqr, p.value=m.sum$parameters[4], N=N, 
                                 Samples=nrow(OTU.table), Richness=length(p.list), 
                                 Detect=d)
-
-###########################BELOW GROUND  - FAIRWAY:###################
+                                                    
+##################################################
+############BELOW GROUND  - FAIRWAY###############
+##################################################
+                                                    
 # Rarefy to an even depth
 set.seed(111)
 data_phylo_fairway.b.rare <- rarefy_even_depth(data_phylo_fairway.b)
@@ -509,7 +529,9 @@ fitstats.fairway.b <- data.frame(m=m.coef, m.low.ci=m.ci[1], m.up.ci=m.ci[2],
                                  Samples=nrow(OTU.table), Richness=length(p.list), 
                                  Detect=d)
 
-################################PLOT####################
+##############################################################
+#################################PLOT#########################
+##############################################################
 
 #VALUES FROM THE FITSTATS DATA - Assuming you have Rsqr values for above and below habitats
 Above_ground <- c(0.56313, 0.65753, 0.59997, 0.66476)  # Replace with your actual data
@@ -541,8 +563,6 @@ R2_16S <- ggplot(data_long, aes(x = Management_intensity, y = R2_value, color = 
   theme_bw(base_size = 20, base_family = "Times") +
   ylim(0, 1)   # Set y-axis limits from 0 to 1
 
-R2_16S
-
 R2_16S <- R2_16S +
   theme(plot.margin = margin(40, 10, 10, 10, "pt"))  # Adjust the margins as needed
 
@@ -557,4 +577,6 @@ plot_R2_16S
 
 ggsave(file = "R2_Neutral_16SF.tiff", dpi = 900, width = 12, height = 10, units = 'in')
 
-#####END######################################################################################
+#####END
+######################################################################################
+######################################################################################
