@@ -1,13 +1,10 @@
-#############################################################################################################################################
-#########################################################ITS_DATASET R ANALYSIS-5###################################################################
-##############################################################################################################################################
-#######Fer Proano Cuenca ################################################################FEB 2024#############################################
-
 ###############################################################################
 ######################9: R2 BY MANAGEMENT INTENSITY -Figure 6##################
 ###############################################################################
 
+###############################################################################
 ##################ABOVE GROUND HABITAT: LEAVES AND THATCH######################
+###############################################################################
 
 ### Clear workspace ###
 rm(list=ls())
@@ -67,7 +64,10 @@ data_phylo_home_lawn <- subset_samples(data_phylo_above, Management == "Home Law
 data_phylo_greens <- subset_samples(data_phylo_above, Management == "Greens")
 data_phylo_fairway <- subset_samples(data_phylo_above, Management == "Fairway")
 
-###########ABOVE GROUND - UNMANAGED:##########
+###############################################
+###########ABOVE GROUND - UNMANAGED##########
+###############################################
+
 # Rarefy to an even depth
 set.seed(111)
 data_phylo_unmanaged.rare <- rarefy_even_depth(data_phylo_unmanaged)
@@ -120,8 +120,11 @@ fitstats.unmanaged <- data.frame(m=m.coef, m.low.ci=m.ci[1], m.up.ci=m.ci[2],
                                  Rsqr=Rsqr, p.value=m.sum$parameters[4], N=N, 
                                  Samples=nrow(OTU.table), Richness=length(p.list), 
                                  Detect=d)
-
+                                                     
+###############################################
 ##############ABOVE - HOME LAWN:###############
+###############################################
+                                                     
 # Rarefy to an even depth
 set.seed(111)
 data_phylo_home_lawn.rare <- rarefy_even_depth(data_phylo_home_lawn)
@@ -174,8 +177,10 @@ fitstats.home_lawn <- data.frame(m=m.coef, m.low.ci=m.ci[1], m.up.ci=m.ci[2],
                                  Rsqr=Rsqr, p.value=m.sum$parameters[4], N=N, 
                                  Samples=nrow(OTU.table), Richness=length(p.list), 
                                  Detect=d)
-
-#################ABOVE GROUND - GREENS:################
+###############################################
+##########ABOVE GROUND - GREENS################
+###############################################
+                                                     
 # Rarefy to an even depth
 set.seed(111)
 data_phylo_greens.rare <- rarefy_even_depth(data_phylo_greens)
@@ -228,8 +233,10 @@ fitstats.greens <- data.frame(m=m.coef, m.low.ci=m.ci[1], m.up.ci=m.ci[2],
                               Rsqr=Rsqr, p.value=m.sum$parameters[4], N=N, 
                               Samples=nrow(OTU.table), Richness=length(p.list), 
                               Detect=d)
-
-#################ABOVE GROUND - FAIRWAY:################
+###############################################
+#################ABOVE GROUND - FAIRWAY#######
+###############################################
+                                                  
 # Rarefy to an even depth
 set.seed(111)
 data_phylo_fairway.rare <- rarefy_even_depth(data_phylo_fairway)
@@ -282,8 +289,9 @@ fitstats.fairway <- data.frame(m=m.coef, m.low.ci=m.ci[1], m.up.ci=m.ci[2],
                                Rsqr=Rsqr, p.value=m.sum$parameters[4], N=N, 
                                Samples=nrow(OTU.table), Richness=length(p.list), 
                                Detect=d)
-
-################################BELOW GROUND HABITAT############################
+#######################################################################################
+################################BELOW GROUND HABITAT###################################
+#######################################################################################
 
 # Create phyloseq object for terrestrial habitat
 data_phylo_below <- subset_samples(data_phylo, Habitat == "Below_ground")
@@ -297,7 +305,9 @@ data_phylo_home_lawn.b <- subset_samples(data_phylo_below, Management == "Home L
 data_phylo_greens.b <- subset_samples(data_phylo_below, Management == "Greens")
 data_phylo_fairway.b <- subset_samples(data_phylo_below, Management == "Fairway")
 
-######################BELOW GROUND - UNMANAGED:################
+################################################################                                                   
+######################BELOW GROUND - UNMANAGED################
+################################################################                                              
 
 # Rarefy to an even depth
 set.seed(111)
@@ -351,8 +361,10 @@ fitstats.unmanaged.b <- data.frame(m=m.coef, m.low.ci=m.ci[1], m.up.ci=m.ci[2],
                                    Rsqr=Rsqr, p.value=m.sum$parameters[4], N=N, 
                                    Samples=nrow(OTU.table), Richness=length(p.list), 
                                    Detect=d)
-
+################################################################ 
 #################BELOW GROUND - HOME LAWN:#####################
+################################################################ 
+                                                       
 # Rarefy to an even depth
 set.seed(111)
 data_phylo_home_lawn.b.rare <- rarefy_even_depth(data_phylo_home_lawn.b)
@@ -405,8 +417,10 @@ fitstats.home_lawn.b <- data.frame(m=m.coef, m.low.ci=m.ci[1], m.up.ci=m.ci[2],
                                    Rsqr=Rsqr, p.value=m.sum$parameters[4], N=N, 
                                    Samples=nrow(OTU.table), Richness=length(p.list), 
                                    Detect=d)
-
-#######################BELOW GROUND - GREENS:#######################
+################################################################ 
+#######################BELOW GROUND - GREENS###################
+################################################################ 
+                                                       
 # Rarefy to an even depth
 set.seed(111)
 data_phylo_greens.b.rare <- rarefy_even_depth(data_phylo_greens.b)
@@ -459,8 +473,10 @@ fitstats.greens.b <- data.frame(m=m.coef, m.low.ci=m.ci[1], m.up.ci=m.ci[2],
                                 Rsqr=Rsqr, p.value=m.sum$parameters[4], N=N, 
                                 Samples=nrow(OTU.table), Richness=length(p.list), 
                                 Detect=d)
-
-###########################BELOW GROUND  - FAIRWAY:###################
+################################################################ 
+###########################BELOW GROUND  - FAIRWAY:#############
+ ################################################################
+                                                    
 # Rarefy to an even depth
 set.seed(111)
 data_phylo_fairway.b.rare <- rarefy_even_depth(data_phylo_fairway.b)
@@ -513,8 +529,9 @@ fitstats.fairway.b <- data.frame(m=m.coef, m.low.ci=m.ci[1], m.up.ci=m.ci[2],
                                  Rsqr=Rsqr, p.value=m.sum$parameters[4], N=N, 
                                  Samples=nrow(OTU.table), Richness=length(p.list), 
                                  Detect=d)
-
+################################################################ 
 ################################PLOT####################
+################################################################ 
 
 #VALUES FROM THE FITSTATS DATA - Assuming you have Rsqr values for above and below habitats
 Above_ground <- c(0.31472, 0.60403, 0.49735, 0.61221)  # Replace with your actual data
@@ -561,4 +578,6 @@ plot_ITS_R2
 
 ggsave(file = "R2_Neutral_ITSF.tiff", dpi = 900, width = 12, height = 10, units = 'in')
 
-#####END######################################################################################
+#####END
+######################################################################################
+######################################################################################
