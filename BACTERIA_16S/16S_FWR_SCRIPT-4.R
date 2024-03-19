@@ -1,18 +1,14 @@
 ##########################################################################################################
-##################8:SLOAN NEUTRAL MODEL - Figure 4-5 Whole community, below and above ground ##############
+##################8:SLOAN NEUTRAL MODEL - Figure 4 Whole community, below and above ground ##############
 ##########################################################################################################
 
 ### Clear workspace ###
-citation("RColorBrewer")
-packageVersion("RColorBrewer")
-
 rm(list=ls())
 
 #Re-read the data to create the Phyloseq object
 count_tab <- read.table("16S_ASVs_countsF_USE.tsv", sep="\t", header=T, row.names=1) 
 tax_tab <- read.table("16S_ASVs_Taxonomy_F_USE.tsv", sep="\t", header=T, row.names=1)
 sample_info_tab <- read.table("16S_METADATA_use.txt", sep="\t", header=TRUE, row.names=1, fileEncoding = "UTF-8")
-
 asvs.t = t(count_tab) # t(x) = Transpose 'otu_table-class' or 'phyloseq-class'
 
 # Create a phyloseq object
@@ -20,7 +16,6 @@ OTU <- otu_table(asvs.t, taxa_are_rows=F)
 SAM <- sample_data(sample_info_tab,errorIfNULL=TRUE)
 TAX <- tax_table(as.matrix(tax_tab), errorIfNULL=TRUE)
 data_phylo <- phyloseq(OTU, TAX, SAM)
-data_phylo 
 
 # Packages needed for analysis
 library(dplyr)
@@ -50,7 +45,9 @@ library("stats4")
 # Extract the OTU table from the phyloseq object
 OTU.table = otu_table(data_phylo.rare)
 
-####################################Method 1
+########################################################################
+###################Model- Whole metacommunity###########################
+########################################################################
                                           
 # calculate the average number of individuals per community (number of sequences per sumple?) #
 N <- mean(apply(OTU.table, 1, sum))
@@ -101,9 +98,6 @@ colnames(B) <- c("p", "freq", "freq.pred", "ci.lower", "ci.upper")
 
 # write prediction data #
 write.csv(B, "Result_Prediction_16S.tsv")
-
-m.fit 
-Rsqr
 
 # set point colour #
 Col <- rep(1,nrow(B))
@@ -173,14 +167,11 @@ plot_bacterial.model  <- ggdraw() +
   draw_label("Bacteria", fontface = "bold", size = 20, x = 0.5, y = 0.98) +  # Add the title
   draw_label("D", size = 20, x = 0.025, y = 0.98, fontface = "bold")  # Add the tag "A"
 
-# Print the plot
-plot_bacterial.model
-
 ggsave(file = "Neutral_metacommunity_16SF.tiff", dpi = 900, width = 16, height = 12, units = 'in')
 
-#########################################################
-###########Figure 5: above and below ground##############
-#########################################################
+###########################################################################
+#################Figure 4: above and below ground##########################
+###########################################################################
 
 # Section is the column in your sample_info_tab that denotes the habitat
 sample_info_tab$Habitat <- factor(ifelse(sample_info_tab$Section %in% c("Thatch", "Leaf"), "Above_ground", "Below_ground"))
@@ -192,7 +183,9 @@ data_phylo <- phyloseq(OTU, TAX, SAM)
 # Create phyloseq object for above habitat
 data_phylo_above <- subset_samples(data_phylo, Habitat == "Above_ground")
 
-################################ABOVE GROUND################################
+########################################################################
+################################ABOVE GROUND############################
+########################################################################
 
 # Rarefy to an even depth
 set.seed(111)
@@ -255,9 +248,6 @@ B <- cbind(p, freq, freq.pred, pred.ci[,2:3])
 #B <- merge(A, KSDF, by=0)
 colnames(B) <- c("p", "freq", "freq.pred", "ci.lower", "ci.upper")
 
-m.fit 
-Rsqr
-
 # set point colour #
 Col <- rep(1,nrow(B))
 B <- cbind(B, Col)
@@ -314,7 +304,6 @@ p <- p + guides(scale="none",
                 size=FALSE,
                 pch=guide_legend(title=NULL),
                 colour=guide_legend(title=NULL))
-p
 
 # Increase the plot margins
 above16S.model  <- p  +
@@ -326,12 +315,11 @@ plot_above16S.model  <- ggdraw() +
   draw_label("Above ground", fontface = "bold", size = 20, x = 0.5, y = 0.98) +  # Add the title
   draw_label("E", size = 20, x = 0.025, y = 0.98, fontface = "bold")  # Add the tag "A"
 
-# Print the plot
-plot_above16S.model
-
 ggsave(file = "Neutral_above_ground_16SF.tiff", dpi = 900, width = 16, height = 12, units = 'in')
 
-##########################################BELOW GROUND#########################
+########################################################################
+#############################BELOW GROUND###############################
+########################################################################
 
 # Create phyloseq object for below ground habitat
 data_phylo_below <- subset_samples(data_phylo, Habitat == "Below_ground")
@@ -392,9 +380,6 @@ B <- cbind(p, freq, freq.pred, pred.ci[,2:3])
 #B <- merge(A, KSDF, by=0)
 colnames(B) <- c("p", "freq", "freq.pred", "ci.lower", "ci.upper")
 
-m.fit 
-Rsqr
-
 # set point colour #
 Col <- rep(1,nrow(B))
 B <- cbind(B, Col)
@@ -451,7 +436,6 @@ p <- p + guides(scale="none",
                 size=FALSE,
                 pch=guide_legend(title=NULL),
                 colour=guide_legend(title=NULL))
-p
 
 # Increase the plot margins
 below16S.model  <- p  +
@@ -462,9 +446,6 @@ plot_below16S.model  <- ggdraw() +
   draw_plot(below16S.model) +  # Add the plot
   draw_label("Below ground", fontface = "bold", size = 20, x = 0.5, y = 0.98) +  # Add the title
   draw_label("F", size = 20, x = 0.025, y = 0.98, fontface = "bold")  # Add the tag "A"
-
-# Print the plot
-plot_below16S.model
 
 ggsave(file = "Neutral_below_ground_16SF.tiff", dpi = 900, width = 16, height = 12, units = 'in')
 
